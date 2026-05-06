@@ -1,0 +1,84 @@
+THE ADVENTURES OF SHERLOCK HOLMES (ULTRA-CONDENSED)
+
+STORY 1: A SCANDAL IN BOHEMIA
+Date: March 20, 1888
+Entities: Holmes, Watson, Irene Adler, King of Bohemia
+Money: £1000 total
+Events:
+- King hires Holmes
+- Holmes disguises as clergyman
+- Fake fire reveals photograph location
+- Irene outsmarts Holmes and escapes
+Outcome: Photograph not recovered
+Insight: Human instinct + intelligence > logic alone
+
+STORY 2: THE RED-HEADED LEAGUE
+Date: April 27, 1890 → October 9, 1890
+Entities: Holmes, Watson, Jabez Wilson, Spaulding
+Money: $4/week
+Events:
+- Fake job created
+- Wilson distracted
+- Tunnel dug to bank
+Outcome: Crime stopped
+Insight: Distraction hides real objective
+
+STORY 3: A CASE OF IDENTITY
+Entities: Mary, Stepfather
+Events:
+- Fake fiancé created
+- Marriage prevented
+Outcome: Truth revealed
+Insight: Identity manipulation for money
+
+STORY 4: BOSCOMBE VALLEY MYSTERY
+Events:
+- Son accused
+- Real killer found
+Insight: False evidence misleads
+
+STORY 5: FIVE ORANGE PIPS
+Events:
+- Warning letters
+- Deaths follow
+Insight: Time-critical failure
+
+STORY 6: TWISTED LIP
+Events:
+- Man missing
+- Double identity revealed
+Insight: Social disguise
+
+STORY 7: BLUE CARBUNCLE
+Events:
+- Jewel hidden in goose
+- Theft traced
+Insight: Small clues → big results
+
+STORY 8: SPECKLED BAND
+Events:
+- Snake used as weapon
+Insight: Unconventional crime
+
+STORY 9: ENGINEER’S THUMB
+Events:
+- Counterfeiters attack
+Insight: Hidden industrial crime
+
+STORY 10: NOBLE BACHELOR
+Events:
+- Bride disappears
+Insight: Past relationships matter
+
+STORY 11: BERYL CORONET
+Events:
+- Theft inside family
+Insight: Trust betrayal
+
+STORY 12: COPPER BEECHES
+Events:
+- Governess discovers secret
+Insight: Hidden abuse
+
+Pattern:
+Client → Problem → Investigation → Truth → Outcome → Insight
