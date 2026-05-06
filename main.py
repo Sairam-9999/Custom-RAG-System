@@ -17,7 +17,7 @@ def main():
 
     print(f"\nRunning in mode: {args.mode.upper()}\n")
 
-    store, chunks = build_rag("data/big.txt")
+    store, chunks = build_rag("data/The_Verdict.txt")
     query = input("Ask a question: ")
 
     evidence_prompt, mistral_prompt, context_chunks = ask_rag(query, store, chunks)
