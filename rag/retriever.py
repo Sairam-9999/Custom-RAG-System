@@ -1,62 +1,71 @@
+import re
 from .embedder import embed_query
 
-EVIDENCE_TERMS = [
-    "Stroud",
-    "technique collapsed",
-    "couldn't do another stroke",
-    "I had never known",
-    "showy splash",
-    "hard passages",
-    "couldn't paint him",
-    "knew enough to leave off",
-    "the thing they called my technique collapsed",
-]
+
+STOPWORDS = {
+    "the", "a", "an", "is", "was", "were", "to", "of", "in", "on",
+    "for", "with", "and", "or", "did", "who", "what", "why", "how",
+    "when", "where", "does", "do", "from", "after", "before"
+}
 
 
-def evidence_score(chunk):
-    chunk_lower = chunk.lower()
-    score = 0
+def tokenize(text):
+    return [
+        w for w in re.findall(r"[a-zA-Z0-9]+", text.lower())
+        if w not in STOPWORDS and len(w) > 2
+    ]
 
-    for term in EVIDENCE_TERMS:
-        if term.lower() in chunk_lower:
-            score += 3
 
-    if "stroud" in chunk_lower and "paint" in chunk_lower:
-        score += 5
+def keyword_score(query, chunk):
+    query_terms = tokenize(query)
+    chunk_terms = set(tokenize(chunk))
 
-    if "couldn't" in chunk_lower and "stroke" in chunk_lower:
-        score += 5
+    if not query_terms:
+        return 0.0
 
-    if "technique" in chunk_lower and "collapsed" in chunk_lower:
-        score += 8
-
-    return score
+    matches = sum(1 for term in query_terms if term in chunk_terms)
+    return matches / len(query_terms)
 
 
 def retrieve(query, vector_store, chunks, top_k=5):
-    expanded_query = (
-        query
-        + " real reason Stroud technique collapsed couldn't do another stroke "
-        + "showy splash hard passages knew enough to leave off"
+    query_embedding = embed_query(query)
+
+    semantic_scores, indices = vector_store.search(
+        query_embedding,
+        top_k=min(80, len(chunks)),
     )
 
-    query_embedding = embed_query(expanded_query)
-    semantic_scores, indices = vector_store.search(query_embedding, top_k=20)
+    semantic_candidates = set()
 
-    candidates = []
+    for idx in indices:
+        if 0 <= idx < len(chunks):
+            semantic_candidates.add(idx)
 
-    for semantic_score, idx in zip(semantic_scores, indices):
+    lexical_candidates = set()
+
+    for idx, chunk in enumerate(chunks):
+        if keyword_score(query, chunk) > 0:
+            lexical_candidates.add(idx)
+
+    candidate_indices = semantic_candidates.union(lexical_candidates)
+
+    scored = []
+
+    for idx in candidate_indices:
         chunk = chunks[idx]
-        keyword_score = evidence_score(chunk)
-        final_score = float(semantic_score) + keyword_score
 
-        candidates.append((final_score, chunk))
+        lexical = keyword_score(query, chunk)
 
-    candidates.sort(reverse=True, key=lambda x: x[0])
+        semantic = 0.0
 
-    final_chunks = []
-    for _, chunk in candidates:
-        if chunk not in final_chunks:
-            final_chunks.append(chunk)
+        if idx in indices:
+            semantic_position = list(indices).index(idx)
+            semantic = float(semantic_scores[semantic_position])
 
-    return final_chunks[:top_k]
+        final_score = semantic + (0.7 * lexical)
+
+        scored.append((final_score, chunk))
+
+    scored.sort(reverse=True, key=lambda x: x[0])
+
+    return [chunk for _, chunk in scored[:top_k]]

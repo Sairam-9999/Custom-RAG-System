@@ -12,7 +12,7 @@ def generate_answer(prompt):
                 "options": {
                     "temperature": 0.2,
                     "top_p": 0.9,
-                    "num_predict": 120,
+                    "num_predict": 60,
                 },
             },
             timeout=300,
