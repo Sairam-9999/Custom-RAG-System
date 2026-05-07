@@ -6,3 +6,5 @@ tiktoken
 tensorflow
 requests
 tqdm
+transformers
+scikit-learn
