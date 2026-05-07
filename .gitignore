@@ -1,15 +1,31 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Virtual environment
+# Virtual environments
 .venv/
 venv/
 
-# Model files
-gpt2/
+# Model weights / checkpoints
 *.ckpt
 *.bin
+*.pt
+*.pth
+
+# GPT downloaded weights
+gpt2/124M/
+
+# Fine-tuned checkpoints
+rag_finetuned_gpt2_ckpt/
+model/rag_finetuned_gpt2_ckpt/
+
+# FAISS indexes
+*.index
+
+# Environment variables
+.env
 
 # OS files
 .DS_Store
