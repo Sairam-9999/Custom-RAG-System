@@ -138,20 +138,10 @@ Fine-tuning helps the model learn:
 
 ```text
 RAG plus LLM/
-├── .git/
-├── .venv/
-├── __pycache__/
-│
 ├── data/
 │   ├── The_Verdict.txt
 │   └── big.txt
 │
-├── gpt2/
-│   └── 124M/
-│       ├── checkpoint
-│       ├── encoder.json
-│       ├── hparams.json
-│       └── model weights
 │
 ├── main.py
 │
@@ -162,11 +152,6 @@ RAG plus LLM/
 │   ├── rag_eval_sherlock.jsonl
 │   ├── rag_train_sherlock.jsonl
 │   ├── test_finetuned_gpt2.py
-│   ├── gpt2/
-│   └── rag_finetuned_gpt2_ckpt/
-│       ├── model_final.pt
-│       ├── model_step_25.pt
-│       └── model_step_100.pt
 │
 ├── rag/
 │   ├── __init__.py
@@ -178,9 +163,9 @@ RAG plus LLM/
 │   ├── retriever.py
 │   └── vector_store.py
 │
-└── rag_finetuned_gpt2_ckpt/
-    ├── model_final.pt
-    └── model_step_25.pt
+├── assests/
+│   ├── ss
+│   ├── ssc
 ```
 
 ---
