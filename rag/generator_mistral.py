@@ -10,9 +10,9 @@ def generate_answer(prompt):
                 "prompt": prompt,
                 "stream": False,
                 "options": {
-                    "temperature": 0.2,
+                    "temperature": 0.05,
                     "top_p": 0.9,
-                    "num_predict": 60,
+                    "num_predict": 25,
                 },
             },
             timeout=300,

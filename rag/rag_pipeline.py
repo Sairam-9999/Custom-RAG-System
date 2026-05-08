@@ -20,30 +20,64 @@ def build_rag(file_path):
     return store, chunks
 
 
-def ask_rag(query, store, chunks):
-    context_chunks = retrieve(query, store, chunks, top_k=4)
+def is_fact_question(query):
+    q = query.lower()
 
-    raw_context = "\n\n".join(context_chunks)
+    starters = (
+        "who",
+        "what",
+        "when",
+        "where",
+        "which",
+        "how much",
+        "how many",
+    )
 
-    mistral_prompt = f"""
+    return q.startswith(starters)
+
+
+def build_prompt(query, context):
+    if is_fact_question(query):
+        return f"""
 <s>[INST]
-You are a grounded RAG assistant.
+Answer using ONLY the context.
 
-Answer ONLY using the provided context.
+Give a SHORT direct answer.
+
+If answer is missing say:
+"I don't know from the provided context."
 
 Question:
 {query}
 
 Context:
-{raw_context}
-
-Rules:
-- Give short factual answers when possible.
-- For reasoning questions, explain in 2-3 sentences.
-- Do not invent facts.
-- If answer is missing, say:
-"I don't know from the provided context."
+{context}
 [/INST]
 """
+    else:
+        return f"""
+<s>[INST]
+Answer using ONLY the context.
+
+Explain briefly in 2-3 sentences.
+
+If answer is missing say:
+"I don't know from the provided context."
+
+Question:
+{query}
+
+Context:
+{context}
+[/INST]
+"""
+
+
+def ask_rag(query, store, chunks):
+    context_chunks = retrieve(query, store, chunks, top_k=10)
+
+    raw_context = "\n\n".join(context_chunks[:3])
+
+    mistral_prompt = build_prompt(query, raw_context)
 
     return mistral_prompt, context_chunks

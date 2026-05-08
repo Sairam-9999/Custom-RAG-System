@@ -1,11 +1,13 @@
 import re
+import math
+from collections import Counter
 from .embedder import embed_query
 
 
 STOPWORDS = {
     "the", "a", "an", "is", "was", "were", "to", "of", "in", "on",
     "for", "with", "and", "or", "did", "who", "what", "why", "how",
-    "when", "where", "does", "do", "from", "after", "before"
+    "when", "where", "does", "do", "from", "after", "before", "about"
 }
 
 
@@ -16,56 +18,106 @@ def tokenize(text):
     ]
 
 
-def keyword_score(query, chunk):
+def bm25_scores(query, chunks, k1=1.5, b=0.75):
     query_terms = tokenize(query)
-    chunk_terms = set(tokenize(chunk))
+    tokenized_chunks = [tokenize(chunk) for chunk in chunks]
 
     if not query_terms:
-        return 0.0
+        return [0.0] * len(chunks)
 
-    matches = sum(1 for term in query_terms if term in chunk_terms)
-    return matches / len(query_terms)
+    doc_freq = Counter()
+    for terms in tokenized_chunks:
+        for term in set(terms):
+            doc_freq[term] += 1
+
+    avg_len = sum(len(t) for t in tokenized_chunks) / max(len(tokenized_chunks), 1)
+    scores = []
+
+    for terms in tokenized_chunks:
+        term_counts = Counter(terms)
+        doc_len = len(terms)
+        score = 0.0
+
+        for term in query_terms:
+            if term not in term_counts:
+                continue
+
+            df = doc_freq.get(term, 0)
+            idf = math.log((len(chunks) - df + 0.5) / (df + 0.5) + 1)
+            tf = term_counts[term]
+
+            denom = tf + k1 * (1 - b + b * doc_len / max(avg_len, 1))
+            score += idf * ((tf * (k1 + 1)) / denom)
+
+        scores.append(score)
+
+    return scores
+
+
+def normalize(values):
+    if not values:
+        return []
+
+    min_v = min(values)
+    max_v = max(values)
+
+    if max_v == min_v:
+        return [0.0 for _ in values]
+
+    return [(v - min_v) / (max_v - min_v) for v in values]
 
 
 def retrieve(query, vector_store, chunks, top_k=5):
     query_embedding = embed_query(query)
 
-    semantic_scores, indices = vector_store.search(
+    semantic_scores, semantic_indices = vector_store.search(
         query_embedding,
-        top_k=min(80, len(chunks)),
+        top_k=min(120, len(chunks)),
     )
 
-    semantic_candidates = set()
+    bm25_raw = bm25_scores(query, chunks)
+    bm25_norm = normalize(bm25_raw)
 
-    for idx in indices:
+    semantic_map = {}
+    semantic_norm = normalize([float(s) for s in semantic_scores])
+
+    for idx, score in zip(semantic_indices, semantic_norm):
         if 0 <= idx < len(chunks):
-            semantic_candidates.add(idx)
+            semantic_map[idx] = score
 
-    lexical_candidates = set()
+    candidate_indices = set(semantic_map.keys())
 
-    for idx, chunk in enumerate(chunks):
-        if keyword_score(query, chunk) > 0:
-            lexical_candidates.add(idx)
+    # Add strongest BM25 candidates globally, even if FAISS missed them.
+    bm25_ranked = sorted(
+        range(len(chunks)),
+        key=lambda i: bm25_norm[i],
+        reverse=True,
+    )
 
-    candidate_indices = semantic_candidates.union(lexical_candidates)
+    candidate_indices.update(bm25_ranked[: min(80, len(chunks))])
 
     scored = []
 
     for idx in candidate_indices:
-        chunk = chunks[idx]
+        semantic = semantic_map.get(idx, 0.0)
+        lexical = bm25_norm[idx]
 
-        lexical = keyword_score(query, chunk)
+        # Generic hybrid score. Lexical is slightly stronger for factual QA.
+        final_score = (0.45 * semantic) + (0.55 * lexical)
 
-        semantic = 0.0
-
-        if idx in indices:
-            semantic_position = list(indices).index(idx)
-            semantic = float(semantic_scores[semantic_position])
-
-        final_score = semantic + (0.7 * lexical)
-
-        scored.append((final_score, chunk))
+        scored.append((final_score, idx, chunks[idx]))
 
     scored.sort(reverse=True, key=lambda x: x[0])
 
-    return [chunk for _, chunk in scored[:top_k]]
+    results = []
+    seen = set()
+
+    for _, idx, chunk in scored:
+        if chunk not in seen:
+            results.append(chunk)
+            seen.add(chunk)
+
+        if len(results) >= top_k:
+            break
+
+    return results
