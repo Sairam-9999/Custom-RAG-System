@@ -3,7 +3,7 @@ from pathlib import Path
 
 from rag.rag_pipeline import build_rag, ask_rag
 from rag.generator_mistral import generate_answer as mistral_generate
-from rag.generator_finetuned import generate_answer as finetuned_generate
+from rag.generator_finetuned import generate_answer as finetuned_generate, load_finetuned_model
 
 
 def print_context(context_chunks, top_n=3):
@@ -31,7 +31,7 @@ def main():
     parser.add_argument(
         "--file",
         type=str,
-        default="data/The_Verdict.txt",
+        default="data/magic_academy_100kb_story.txt",
         help="TXT file to index and test with RAG.",
     )
 
@@ -74,18 +74,25 @@ def main():
     # 1. Build RAG index from selected TXT file
     store, chunks = build_rag(str(data_path))
 
-    # 2. Ask user question
+    # 2. Load model once if using finetuned mode
+    finetuned_model = None
+    if args.mode == "finetuned":
+        print("Loading fine-tuned GPT-2 model...")
+        finetuned_model = load_finetuned_model(checkpoint_path=args.checkpoint)
+        print("Model loaded.\n")
+
+    # 3. Ask user question
     query = input("Ask a question: ")
 
-    # 3. Retrieve context + build prompts
+    # 4. Retrieve context + build prompts
     mistral_prompt, context_chunks = ask_rag(query, store, chunks)
 
     if not args.hide_context:
-        print_context(context_chunks)
+        print_context(context_chunks, top_n=10)
 
     print("\n--- Generating Answer ---\n")
 
-    # 4. Generate final answer
+    # 5. Generate final answer
     if args.mode == "mistral":
         answer = mistral_generate(mistral_prompt)
 
@@ -95,7 +102,7 @@ def main():
         answer = finetuned_generate(
             context=context,
             question=query,
-            checkpoint_path=args.checkpoint,
+            model=finetuned_model,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
         )
