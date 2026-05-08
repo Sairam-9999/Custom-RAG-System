@@ -4,36 +4,25 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Virtual environments
+# Environments
 .venv/
 venv/
-
-# Model weights / checkpoints
-*.ckpt
-*.bin
-*.pt
-*.pth
-
-# GPT downloaded weights
-gpt2/124M/
-
-# Fine-tuned checkpoints
-rag_finetuned_gpt2_ckpt/
-model/rag_finetuned_gpt2_ckpt/
-
-# FAISS indexes
-*.index
-
-# Environment variables
+env/
 .env
 
-# OS files
+# Model weights / checkpoints
+model/gpt2/
+model/rag_finetuned_gpt2_ckpt/
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.safetensors
+
+# Cache
+.cache/
+*.log
+
+# OS
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Jupyter
-.ipynb_checkpoints/
