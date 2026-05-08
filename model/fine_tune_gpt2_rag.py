@@ -31,8 +31,29 @@ from gpt_download_updated import download_and_load_gpt2
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 BASE_DIR = Path(__file__).resolve().parent
-TRAIN_PATH = BASE_DIR / "rag_train_sherlock.jsonl"
-EVAL_PATH = BASE_DIR / "rag_eval_sherlock.jsonl"
+TRAIN_PATH = BASE_DIR / "rag_train_mixed_large.jsonl"
+EVAL_PATH = BASE_DIR / "rag_eval_mixed_large.jsonl"
+
+MODEL_CONFIGS = {
+    "124M": {
+        "vocab_size": 50257,
+        "context_length": 1024,
+        "emb_dim": 768,
+        "n_heads": 12,
+        "n_layers": 12,
+        "drop_rate": 0.1,
+        "qkv_bias": True,
+    },
+    "355M": {
+        "vocab_size": 50257,
+        "context_length": 1024,
+        "emb_dim": 1024,
+        "n_heads": 16,
+        "n_layers": 24,
+        "drop_rate": 0.1,
+        "qkv_bias": True,
+    },
+}
 
 
 def load_jsonl(path: str | Path) -> List[dict]:
@@ -60,22 +81,28 @@ class RAGInstructionDataset(Dataset):
         prompt = ex["prompt"]
         completion = ex["completion"]
 
-        prompt_ids = self.tokenizer.encode(prompt)
-        full_ids = self.tokenizer.encode(prompt + completion)
+        eos_token = ""
+        if not completion.endswith(eos_token):
+            completion = completion + eos_token
 
-        # Add GPT-2 EOS token (token ID 50256) so the model learns where to stop.
-        full_ids.append(50256)
+        prompt_ids = self.tokenizer.encode(
+            prompt,
+            allowed_special={"<|endoftext|>"}
+        )
 
-        # Keep the END of the sequence if too long, but preserve answer whenever possible.
+        full_ids = self.tokenizer.encode(
+            prompt + completion,
+            allowed_special={"<|endoftext|>"}
+        )
+
         full_ids = full_ids[: self.max_length]
 
         input_ids = full_ids[:-1]
         labels = full_ids[1:]
 
-        # Mask prompt tokens. Loss only trains answer/completion behavior.
-        # Because labels are shifted by one, mask up to prompt_len - 1.
         prompt_len = min(len(prompt_ids), len(labels))
         labels = labels.copy()
+
         for i in range(max(prompt_len - 1, 0)):
             labels[i] = -100
 
@@ -141,8 +168,8 @@ def main() -> None:
     parser.add_argument("--train", default=str(TRAIN_PATH))
     parser.add_argument("--eval", default=str(EVAL_PATH))
     parser.add_argument("--model-size", default="124M", choices=["124M", "355M", "774M", "1558M"])
-    parser.add_argument("--models-dir", default="gpt2")
-    parser.add_argument("--out-dir", default="rag_finetuned_gpt2_ckpt")
+    parser.add_argument("--models-dir", default=str(BASE_DIR / "gpt2"))
+    parser.add_argument("--out-dir", default=str(BASE_DIR / "rag_finetuned_gpt2_ckpt"))
     parser.add_argument("--max-length", type=int, default=512)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=1)  # FIX 5: Reduce epochs to prevent overfitting on tiny dataset
@@ -164,7 +191,8 @@ def main() -> None:
     print(f"Train examples: {len(train_ds)}")
     print(f"Eval examples: {len(eval_ds)}")
 
-    model = GPTModel(GPT_CONFIG_124M).to(DEVICE)
+    config = MODEL_CONFIGS[args.model_size]
+    model = GPTModel(config).to(DEVICE)
 
     if not args.skip_pretrained:
         print("Downloading/loading GPT-2 pretrained weights...")

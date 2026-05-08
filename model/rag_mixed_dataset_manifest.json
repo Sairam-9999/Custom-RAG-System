@@ -1,0 +1,32 @@
+{
+  "total_examples": 3000,
+  "train_examples": 2640,
+  "eval_examples": 360,
+  "type_counts": {
+    "fact": 2363,
+    "refusal": 498,
+    "reasoning": 139
+  },
+  "sources": [
+    "adventure_party_treasure_hunt_100kb_story.txt",
+    "big.txt",
+    "dark_fantasy_100kb_story.txt",
+    "dragons_and_ancient_powers_100kb_story.txt",
+    "epic_kingdoms_and_wars_100kb_story.txt",
+    "magic_academy_100kb_story.txt",
+    "mythology_inspired_100kb_story.txt",
+    "The_Verdict.txt"
+  ],
+  "question_types_supported": [
+    "what",
+    "who",
+    "where",
+    "when",
+    "why",
+    "how",
+    "which",
+    "did",
+    "was"
+  ],
+  "notes": "Fully generic synthetic RAG dataset generator using sentence extraction, noisy contexts, question variants, and refusals."
+}
