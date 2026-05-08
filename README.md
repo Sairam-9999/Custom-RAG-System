@@ -1,160 +1,83 @@
-# 🧠 RAG + LLM System with Fine-Tuned GPT-2, Custom Transformer, and Mistral
+# RAG + Fine-Tuned GPT-2 + Mistral Research System
 
-A fully custom Retrieval-Augmented Generation (RAG) system built from scratch using:
+A research-focused Retrieval-Augmented Generation (RAG) system exploring:
 
-* Fine-Tuned GPT-2
-* Custom Transformer/GPT implementation
-* FAISS vector search
-* Hybrid retrieval
-* Semantic embeddings
-* Query expansion
-* Local Mistral inference using Ollama
-* Autoregressive text generation
+* semantic retrieval
+* grounded QA
+* synthetic dataset generation
+* GPT-2 fine-tuning
+* hallucination reduction
+* realistic noisy-context training
+* local Mistral inference
+* retrieval-aware generation
 
-This project demonstrates the internal mechanics behind modern LLM systems and production-style RAG pipelines.
-
----
-
-# 🚀 Features
-
-## 🔍 Retrieval-Augmented Generation (RAG)
-
-* Document chunking with overlap
-* Semantic embedding generation
-* FAISS vector database
-* Hybrid retrieval (semantic + keyword reranking)
-* Query expansion
-* Context-aware answer generation
+This project evolved from a simple RAG prototype into a deeper exploration of modern retrieval-grounded LLM system design.
+Model weights are not committed. Run the training/download scripts to recreate them locally.
 
 ---
 
-## 🤖 Multiple Generation Modes
+# 🚀 What This Project Does
 
-### 1. Mistral Mode (Production-style)
+The system:
 
-Uses:
+1. Reads `.txt` documents
+2. Splits them into semantic chunks
+3. Embeds chunks using Sentence Transformers
+4. Stores embeddings in a vector index
+5. Retrieves relevant chunks for a query
+6. Generates answers using:
 
-* Ollama
-* Local Mistral model
-* REST API inference
-
----
-
-### 2. Custom GPT Mode
-
-Uses:
-
-* Fully custom Transformer implementation
-* Multi-head self-attention
-* Positional embeddings
-* GPT-2 weight loading
-* Autoregressive generation
-
----
-
-### 3. Fine-Tuned GPT-2 Mode
-
-Uses:
-
-* Fine-tuned GPT-2 checkpoints
-* Retrieval-grounded QA generation
-* Supervised fine-tuning pipeline
-* Evaluation/testing workflow
-
----
-
-# 🧠 What This Project Demonstrates
-
-This project was built to deeply understand how modern LLM systems work internally.
-
-Instead of only calling APIs, this system implements:
-
-* Transformer architecture
-* Attention mechanism
-* Autoregressive generation
-* Vector retrieval systems
-* Embedding pipelines
-* Hybrid search
-* Prompt engineering
-* Fine-tuning workflows
-* Evaluation pipelines
-* Local LLM orchestration
-
----
-
-# 🏗️ System Architecture
+   * Mistral (via Ollama)
+   * Fine-tuned GPT-2
+7. Supports grounded refusals:
 
 ```text
-Raw Documents
-      ↓
-Chunking
-      ↓
-Embeddings
-      ↓
-FAISS Vector Store
-      ↓
-Semantic Retrieval
-      ↓
-Hybrid Re-ranking
-      ↓
-Prompt Construction
-      ↓
-LLM Generation
-      ↓
-Final Answer
+I don't know from the provided context.
 ```
 
 ---
 
-# 🔥 Fine-Tuning Pipeline
-
-The project includes a supervised GPT-2 fine-tuning pipeline for retrieval-style question answering.
-
-Pipeline:
+# 🧠 System Architecture
 
 ```text
-Training Dataset
-        ↓
-Tokenization
-        ↓
-GPT-2 Fine-Tuning
-        ↓
-Checkpoint Saving
-        ↓
-Evaluation
-        ↓
-Inference Testing
+User Question
+      ↓
+Retriever
+      ↓
+Top-K Relevant Chunks
+      ↓
+Generator
+   ├── Mistral
+   └── Fine-Tuned GPT-2
+      ↓
+Grounded Answer
 ```
-
-Fine-tuning helps the model learn:
-
-* retrieval-grounded responses
-* structured QA behavior
-* improved contextual generation
 
 ---
 
-# 📂 Updated Project Structure
+# 📂 Current Project Structure
 
 ```text
-RAG plus LLM/
+RAG pus LLM/
 ├── data/
 │   ├── The_Verdict.txt
-│   └── big.txt
-│
-│
-├── main.py
+│   ├── adventure_party_treasure_hunt_100kb_story.txt
+│   ├── big.txt
+│   ├── dragons_and_ancient_powers_100kb_story.txt
+│   ├── epic_kingdoms_and_wars_100kb_story.txt
+│   └── mythology_inspired_100kb_story.txt
 │
 ├── model/
 │   ├── custom_gpt_updated.py
 │   ├── fine_tune_gpt2_rag.py
+│   ├── generate_large_rag_dataset.py
 │   ├── gpt_download_updated.py
-│   ├── rag_eval_sherlock.jsonl
-│   ├── rag_train_sherlock.jsonl
+│   ├── rag_train_mixed_large.jsonl
+│   ├── rag_eval_mixed_large.jsonl
+│   ├── rag_mixed_dataset_manifest.json
 │   ├── test_finetuned_gpt2.py
 │
 ├── rag/
-│   ├── __init__.py
 │   ├── chunker.py
 │   ├── embedder.py
 │   ├── generator_finetuned.py
@@ -163,463 +86,426 @@ RAG plus LLM/
 │   ├── retriever.py
 │   └── vector_store.py
 │
-├── assests/
-│   ├── ss
-│   ├── ssc
+└── main.py
 ```
 
 ---
 
-# ⚙️ Technologies Used
+# ⚡ Features
 
-| Component         | Technology             |
-| ----------------- | ---------------------- |
-| Deep Learning     | PyTorch                |
-| Embeddings        | Sentence Transformers  |
-| Embedding Model   | BAAI/bge-small-en-v1.5 |
-| Vector Database   | FAISS                  |
-| Local LLM Runtime | Ollama                 |
-| External Model    | Mistral                |
-| Tokenization      | tiktoken               |
-| GPT Weights       | GPT-2 124M             |
-| Backend Logic     | Python                 |
-
----
-
-# 🧩 Core Components
-
-## 1. Chunking
-
-Splits large documents into overlapping chunks for retrieval.
-
-```python
-chunk_size=900
-overlap=250
-```
-
-Purpose:
-
-* preserve context continuity
-* improve retrieval quality
-* reduce semantic fragmentation
-
----
-
-## 2. Embeddings
-
-Uses dense vector embeddings to convert text into semantic representations.
-
-Model used:
-
-```python
-BAAI/bge-small-en-v1.5
-```
-
----
-
-## 3. Vector Search
-
-Uses FAISS for fast nearest-neighbor similarity search.
-
-Implemented with:
-
-```python
-faiss.IndexFlatIP
-```
-
----
-
-## 4. Hybrid Retrieval
-
-Retrieval combines:
-
-* semantic similarity
-* keyword boosting
-* evidence scoring
-* reranking
-
-This improves answer relevance significantly over pure vector search.
-
----
-
-## 5. Query Expansion
-
-The system enriches user queries with additional evidence terms to improve recall.
-
-Example:
-
-```python
-expanded_query = query + " additional evidence terms..."
-```
-
----
-
-## 6. Prompt Engineering
-
-Retrieved context is transformed into structured prompts before generation.
-
-The prompts:
-
-* reduce hallucinations
-* avoid direct copying
-* focus answers on evidence
-
----
-
-# 🤖 Custom GPT Implementation
-
-This project includes a custom GPT-style Transformer implementation from scratch.
-
-Implemented components:
-
-* Token embeddings
-* Positional embeddings
-* Layer normalization
-* GELU activation
-* Feed-forward networks
-* Multi-head self-attention
-* Residual connections
-* Causal masking
-* Transformer blocks
-* Autoregressive generation
-
----
-
-# 🔥 Multi-Head Attention
-
-The custom Transformer implements causal self-attention using masking.
-
-```python
-torch.triu(...)
-```
-
-This prevents future token leakage during generation.
-
----
-
-# 🎲 Text Generation
-
-The custom generator supports:
-
-* Temperature scaling
-* Top-k sampling
-* Probabilistic token generation
-
-This mimics modern autoregressive LLM inference.
-
----
-
-# 🧠 GPT-2 Weight Loading
-
-The project downloads and loads GPT-2 weights dynamically.
-
-Features:
-
-* TensorFlow checkpoint loading
-* Parameter mapping into PyTorch
-* Weight assignment into custom architecture
-
----
-
-# 📊 Evaluation
-
-The project includes evaluation datasets and testing pipelines.
-
-Evaluation focuses on:
-
-* retrieval quality
-* grounded generation
-* hallucination observation
-* answer relevancy
-* unseen document testing
-
-The system also displays retrieved context before generation for transparency and debugging.
-
----
-
-# 🚀 Running the Project
-
-# Mode 1 — Mistral Mode
+## ✅ Semantic Retrieval
 
 Uses:
 
-* Ollama
-* local Mistral model
-* production-style inference
+* Sentence Transformers
+* vector similarity search
+* evidence-aware reranking
+* chunk deduplication
 
-Run:
+---
 
-```bash
-python main.py --mode mistral
+## ✅ Fine-Tuned GPT-2
+
+Supports:
+
+* GPT-2 124M
+* GPT-2 355M
+
+Custom training pipeline includes:
+
+* retrieval-grounded QA
+* refusal behavior
+* noisy-context learning
+* synthetic instruction generation
+
+---
+
+## ✅ Local Mistral Inference
+
+Supports local inference through Ollama:
+
+```powershell
+ollama run mistral
+```
+
+This provides significantly stronger reasoning and grounding than small GPT-2 models.
+
+---
+
+## ✅ Synthetic Dataset Generation
+
+Automatically generates:
+
+* what questions
+* who questions
+* where questions
+* when questions
+* why questions
+* how questions
+* which questions
+* did/was questions
+* refusal examples
+
+---
+
+## ✅ Realistic RAG Training
+
+The system trains using noisy multi-chunk retrieval simulation:
+
+```text
+Chunk 1 → distractor
+Chunk 2 → answer
+Chunk 3 → irrelevant
+```
+
+This teaches:
+
+* evidence grounding
+* distractor rejection
+* hallucination reduction
+* realistic retrieval behavior
+
+---
+
+# 🔥 How Dataset Generation Works
+
+The project includes a fully generic synthetic dataset generator:
+
+```text
+Documents
+    ↓
+Automatic QA Generation
+    ↓
+Question Augmentation
+    ↓
+Noisy Chunk Construction
+    ↓
+Refusal Example Injection
+    ↓
+Train/Eval Split
+    ↓
+Fine-Tuning
+```
+
+The generator creates:
+
+* grounded QA examples
+* reasoning examples
+* refusal behavior
+* paraphrased questions
+* noisy retrieval simulations
+
+---
+
+# 🧪 Example Questions
+
+## Sherlock / Literary QA
+
+```text
+Who became the man of the moment?
+What insight does The Red-Headed League show?
+Who gave Gisburn the donkey sketch?
 ```
 
 ---
 
-# Mode 2 — Custom GPT Mode
+## Fantasy QA
 
-Uses:
-
-* custom Transformer implementation
-* GPT-2 weight loading
-* autoregressive generation
-
-Run:
-
-```bash
-python main.py --mode custom
+```text
+What destroyed kingdoms faster than swords?
+Where did priests wearing bone masks chant?
+Who controlled the black towers beneath the crimson moon?
 ```
 
 ---
 
-# Mode 3 — Fine-Tuned GPT-2 Mode
+# 🛠️ Installation
 
-Uses:
+## 1. Create Environment
 
-* fine-tuned GPT-2 checkpoints
-* retrieval-grounded generation
-* trained QA behavior
-
-Run:
-
-```bash
-python main.py --mode finetuned
+```powershell
+conda create -n llm-rag python=3.10 -y
+conda activate llm-rag
 ```
 
 ---
 
-# 📦 Installation
+## 2. Install Dependencies
 
-## 1. Clone Repository
-
-```bash
-git clone <your-repo-url>
-
-cd "RAG plus LLM"
+```powershell
+pip install torch transformers sentence-transformers faiss-cpu numpy pandas tiktoken requests
 ```
 
 ---
 
-## 2. Create Virtual Environment
+## 3. Install Ollama
 
-### Windows
-
-```bash
-python -m venv .venv
-
-.venv\Scripts\activate
-```
-
-### Mac/Linux
-
-```bash
-python3 -m venv .venv
-
-source .venv/bin/activate
-```
-
----
-
-## 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-# 🦙 Install Ollama
-
-This project uses a locally hosted Mistral model through Ollama.
-
-Download Ollama:
+Install:
 
 https://ollama.com
 
----
+Then run:
 
-# ⬇️ Download Mistral Model
-
-After installing Ollama:
-
-```bash
+```powershell
 ollama pull mistral
+ollama run mistral
 ```
 
 ---
 
-# ▶️ Start Ollama Server
+# 🚀 Running the System
 
-Before running the project:
+## Mistral Mode
 
-```bash
-ollama serve
+```powershell
+python main.py --mode mistral --file data/The_Verdict.txt
 ```
 
 ---
 
-# 💬 Example Workflow
+## Fine-Tuned GPT-2 Mode
+
+```powershell
+python main.py --mode finetuned --file data/The_Verdict.txt
+```
+
+---
+
+# 🧠 Generate Synthetic Dataset
+
+```powershell
+python model/generate_large_rag_dataset.py
+```
+
+Outputs:
 
 ```text
-Ask a question
-        ↓
-System retrieves relevant chunks
-        ↓
-Hybrid retrieval reranks evidence
-        ↓
-Prompt constructed
-        ↓
-Mistral / Custom GPT / Fine-Tuned GPT generates answer
+rag_train_mixed_large.jsonl
+rag_eval_mixed_large.jsonl
+rag_training_mixed_large_all.jsonl
 ```
 
 ---
 
-# 📖 Example Retrieval Output
+# 🔥 Fine-Tune GPT-2
+
+## GPT-2 355M
+
+```powershell
+python model/fine_tune_gpt2_rag.py --train model/rag_train_mixed_large.jsonl --eval model/rag_eval_mixed_large.jsonl --model-size 355M --epochs 1 --max-length 256
+```
+
+---
+
+# 🧪 Test Fine-Tuned Model
+
+```powershell
+python model/test_finetuned_gpt2.py
+```
+
+Test on custom files:
+
+```powershell
+python model/test_finetuned_gpt2.py --context-file data/magic_academy_100kb_story.txt --question "Where did priests wearing bone masks chant beside rivers of fire?"
+```
+
+---
+
+# 🧠 Major Engineering Learnings
+
+## Retrieval Quality Dominates RAG Quality
+
+Improving retrieval often improved answers more than fine-tuning alone.
+
+---
+
+## Small GPT Models Overfit Easily
+
+Small GPT-2 models:
+
+* memorize patterns quickly
+* hallucinate confidently
+* struggle on unseen contexts
+* require strong grounding supervision
+
+---
+
+## Grounded QA Needs Specialized Training
+
+Standard next-token prediction is not enough.
+
+The model must explicitly learn:
+
+* answer extraction
+* evidence grounding
+* refusal behavior
+* distractor rejection
+
+---
+
+## Synthetic Data Is Extremely Powerful
+
+The project demonstrates how synthetic QA generation can bootstrap large grounded datasets automatically.
+
+This mirrors real-world modern LLM training strategies.
+
+---
+
+# 🚀 Recent Major Upgrades
+
+## 🔥 Fully Generic Dataset Generation
+
+The project evolved from handcrafted story-specific QA generation into a fully generic synthetic RAG dataset pipeline.
+
+Supports arbitrary `.txt` documents.
+
+---
+
+## 🔥 Multi-Domain Training
+
+Training now includes:
+
+* mystery stories
+* fantasy worlds
+* mythology-inspired stories
+* literary prose
+* adventure stories
+* war narratives
+
+This improves:
+
+* generalization
+* retrieval robustness
+* unseen-domain testing
+
+---
+
+## 🔥 Noisy Retrieval Training
+
+Training contexts now simulate real RAG retrieval:
 
 ```text
---- Retrieved Context ---
-
---- Chunk 1 ---
-...
+Chunk 1 → irrelevant
+Chunk 2 → answer
+Chunk 3 → distractor
 ```
 
-The system shows retrieved evidence before generation for transparency and debugging.
+This teaches the model to focus on evidence-bearing chunks.
 
 ---
 
-# 🎯 Learning Outcomes
+## 🔥 Grounded Refusal Training
 
-This project helped build understanding of:
+The model now learns grounded refusals:
 
-## LLM Engineering
+```text
+I don't know from the provided context.
+```
 
-* Transformer internals
-* Attention mechanisms
-* Token generation
-* GPT architectures
-
-## RAG Engineering
-
-* Embeddings
-* Retrieval systems
-* Vector databases
-* Reranking pipelines
-
-## Fine-Tuning
-
-* Supervised training
-* Checkpoint management
-* Inference testing
-* Retrieval-grounded QA
-
-## Information Retrieval
-
-* Query expansion
-* Hybrid search
-* Semantic similarity
-
-## AI Infrastructure
-
-* Ollama
-* Local inference
-* FAISS indexing
+This reduces hallucinations on unsupported questions.
 
 ---
 
-# 📌 Why This Project Matters
+## 🔥 Improved Decoding
 
-Most beginner AI projects only use API wrappers.
+Generation improvements include:
 
-This project instead implements:
+* greedy decoding
+* low-temperature factual inference
+* EOS stopping
+* repetition cleanup
+* fallback refusal handling
 
-* custom Transformer internals
-* hybrid retrieval logic
-* vector search systems
-* fine-tuning pipelines
-* autoregressive generation
-* local LLM orchestration
+---
 
-This provides a deeper understanding of how modern AI systems actually work internally.
+## 🔥 Retrieval Improvements
+
+Retriever upgrades include:
+
+* semantic reranking
+* evidence scoring
+* query expansion
+* overlap scoring
+* chunk deduplication
+
+---
+
+## 🔥 GPT-2 Scaling Experiments
+
+The project evolved from GPT-2 124M experiments into larger GPT-2 355M fine-tuning experiments.
+
+The 355M model was successfully:
+
+* downloaded locally
+* loaded into the custom GPT architecture
+* fine-tuned on synthetic RAG datasets
+* evaluated on unseen retrieval contexts
+* tested against multiple document domains
+
+Research observations:
+
+| Model            | Observation                                                                  |
+| ---------------- | ---------------------------------------------------------------------------- |
+| GPT-2 124M       | weak grounding and unstable extraction                                       |
+| GPT-2 355M       | noticeably stronger retrieval-grounded QA                                    |
+| Fine-tuned GPT-2 | improved factual extraction but still struggles on difficult unseen contexts |
+| Mistral          | significantly stronger reasoning and grounding                               |
+
+The experiments demonstrated how model scale directly impacts:
+
+* grounding quality
+* answer extraction
+* hallucination behavior
+* retrieval robustness
+* unseen-domain generalization
+
+---
+
+# 📈 Current Research Direction
+
+Ongoing exploration includes:
+
+* larger GPT-2 variants
+* LoRA / QLoRA fine-tuning
+* Mistral/Qwen instruction tuning
+* hybrid BM25 + vector retrieval
+* cross-encoder rerankers
+* conversational RAG
+* RAGAS evaluation
+* long-context optimization
+* agentic RAG systems
 
 ---
 
 # ⚠️ Current Limitations
 
-* Small GPT-2 models can still hallucinate
-* Fine-tuned models may struggle on unseen datasets
-* Retrieval quality heavily affects answer quality
-* No conversational memory yet
-* No advanced reranker models yet
+Small GPT-2 models still struggle with:
+
+* difficult unseen contexts
+* multi-hop reasoning
+* exact answer extraction
+* long-context grounding
+* subtle entity disambiguation
+
+Mistral performs significantly better for real-world QA quality.
 
 ---
 
-# 🛠️ Future Improvements
+# 🏁 Final Goal
 
-Potential upgrades:
+The long-term goal is to evolve this into:
 
-* Streamlit UI
-* FastAPI backend
-* Agentic RAG
-* RAGAS evaluation
-* Cross-encoder rerankers
-* Hybrid BM25 retrieval
-* LoRA / QLoRA fine-tuning
-* Multi-document ingestion
-* PDF parsing
-* Conversational memory
-* Real-time streaming
+```text
+Production-grade retrieval-grounded LLM system
+```
 
----
+with:
 
-# 🧠 In Simple Terms
-
-## What I Built
-
-I built a system that can:
-
-* search documents,
-* retrieve relevant information,
-* and generate answers using multiple LLM approaches.
-
----
-
-## Why I Built It
-
-To deeply understand how modern AI systems combine:
-
-* retrieval,
-* transformers,
-* embeddings,
-* and text generation.
-
----
-
-## How It Works
-
-1. Documents are split into chunks
-2. Chunks become embeddings
-3. FAISS retrieves relevant information
-4. Retrieved context is injected into prompts
-5. GPT/Mistral generates grounded answers
-
----
-
-# 📈 Fine-Tuning Observations
-
-During experimentation:
-
-| Observation                                        | Insight                           |
-| -------------------------------------------------- | --------------------------------- |
-| Fine-tuned GPT performs better on trained-style QA | Model learns dataset patterns     |
-| Performance drops on unseen files                  | Generalization limitations exist  |
-| Retrieval quality impacts generation quality       | Better retrieval improves answers |
-| Small GPT-2 models still hallucinate               | Model scale matters               |
-
----
-
-# 👨‍💻 Author
-
-Built as a deep-learning and LLM engineering project to understand:
-
-* how GPT models work internally
-* how RAG systems retrieve knowledge
-* how modern AI pipelines combine retrieval and generation
+* scalable retrieval
+* grounded generation
+* advanced reranking
+* robust evaluation
+* synthetic instruction tuning
+* agentic reasoning
+* memory-aware RAG
+* multi-model orchestration
