@@ -1,7 +1,10 @@
+import time
+
 from .chunker import chunk_text
 from .embedder import get_embeddings
 from .vector_store import VectorStore
 from .retriever import retrieve
+from .retrieval_types import CompressedContext
 
 
 def load_file(file_path):
@@ -73,11 +76,39 @@ Context:
 """
 
 
-def ask_rag(query, store, chunks):
-    context_chunks = retrieve(query, store, chunks, top_k=10)
+def ask_rag(
+    query,
+    store,
+    chunks,
+    reranker=None,
+    context_selector=None,
+    retrieval_top_k=10,
+    rerank_top_n=5,
+    context_top_n=3,
+):
+    timings = {}
 
-    raw_context = "\n\n".join(context_chunks[:3])
+    t0 = time.perf_counter()
+    retrieved_results = retrieve(query, store, chunks, top_k=retrieval_top_k)
+    timings["retrieval_ms"] = (time.perf_counter() - t0) * 1000
 
-    mistral_prompt = build_prompt(query, raw_context)
+    if reranker is not None:
+        t0 = time.perf_counter()
+        results = reranker.rerank(query=query, results=retrieved_results, top_n=rerank_top_n)
+        timings["rerank_ms"] = (time.perf_counter() - t0) * 1000
+    else:
+        results = retrieved_results
+        timings["rerank_ms"] = 0.0
 
-    return mistral_prompt, context_chunks
+    if context_selector is not None:
+        t0 = time.perf_counter()
+        compressed = context_selector.select(query, results)
+        timings["compression_ms"] = (time.perf_counter() - t0) * 1000
+        mistral_prompt = build_prompt(query, compressed.context)
+    else:
+        compressed = None
+        timings["compression_ms"] = 0.0
+        raw_context = "\n\n".join(r.text for r in results[:context_top_n])
+        mistral_prompt = build_prompt(query, raw_context)
+
+    return mistral_prompt, results, compressed, timings

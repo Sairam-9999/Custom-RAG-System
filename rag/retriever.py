@@ -2,6 +2,7 @@ import re
 import math
 from collections import Counter
 from .embedder import embed_query
+from .retrieval_types import RetrievalResult
 
 
 STOPWORDS = {
@@ -112,9 +113,20 @@ def retrieve(query, vector_store, chunks, top_k=5):
     results = []
     seen = set()
 
-    for _, idx, chunk in scored:
+    for final_score, idx, chunk in scored:
         if chunk not in seen:
-            results.append(chunk)
+            semantic = semantic_map.get(idx, 0.0)
+            lexical = bm25_norm[idx]
+
+            results.append(
+                RetrievalResult(
+                    chunk_id=idx,
+                    text=chunk,
+                    semantic_score=semantic,
+                    bm25_score=lexical,
+                    hybrid_score=final_score,
+                )
+            )
             seen.add(chunk)
 
         if len(results) >= top_k:
