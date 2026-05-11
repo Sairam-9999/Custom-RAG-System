@@ -42,15 +42,20 @@ I don't know from the provided context.
 ```text
 User Question
       ↓
-Retriever
+Hybrid Retrieval
+(Dense + BM25)
       ↓
-Top-K Relevant Chunks
+CrossEncoder Reranker
+      ↓
+Context Selector / Compression
       ↓
 Generator
    ├── Mistral
    └── Fine-Tuned GPT-2
       ↓
 Grounded Answer
+      ↓
+Analytics + Evaluation Logs
 ```
 
 ---
@@ -75,17 +80,22 @@ RAG pus LLM/
 │   ├── rag_train_mixed_large.jsonl
 │   ├── rag_eval_mixed_large.jsonl
 │   ├── rag_mixed_dataset_manifest.json
-│   ├── test_finetuned_gpt2.py
+│   └── test_finetuned_gpt2.py
 │
 ├── rag/
-│   ├── chunker.py
-│   ├── embedder.py
-│   ├── generator_finetuned.py
-│   ├── generator_mistral.py
-│   ├── rag_pipeline.py
-│   ├── retriever.py
-│   └── vector_store.py
+│ ├── analytics.py
+│ ├── chunker.py
+│ ├── context_selector.py
+│ ├── embedder.py
+│ ├── generator_finetuned.py
+│ ├── generator_mistral.py
+│ ├── rag_pipeline.py
+│ ├── reranker.py
+│ ├── retrieval_types.py
+│ ├── retriever.py
+│ └── vector_store.py
 │
+├── requirements.txt
 └── main.py
 ```
 
@@ -460,6 +470,159 @@ The experiments demonstrated how model scale directly impacts:
 * unseen-domain generalization
 
 ---
+
+
+# 🚀 Modern Retrieval Optimization Upgrades
+
+The project evolved from a basic RAG pipeline into a modern retrieval-grounded experimentation platform focused on:
+
+* retrieval precision
+* grounded evidence extraction
+* hallucination reduction
+* observability
+* measurable RAG evaluation
+
+---
+
+## 🔥 Phase 1 — Structured Retrieval
+
+Introduced structured `RetrievalResult` objects instead of raw chunk strings.
+
+Enabled:
+
+* metadata propagation
+* reranking support
+* observability
+* analytics infrastructure
+
+```python
+@dataclass
+class RetrievalResult:
+    chunk_id: int
+    text: str
+    semantic_score: float
+    bm25_score: float
+    hybrid_score: float
+    rerank_score: Optional[float] = None
+```
+
+---
+
+## 🔥 Phase 2 — CrossEncoder Reranking
+
+Upgraded pipeline:
+
+```text
+Hybrid Retrieval
+      ↓
+CrossEncoder Reranker
+      ↓
+Top Evidence Chunks
+      ↓
+LLM
+```
+
+Supports:
+
+```text
+BAAI/bge-reranker-base
+```
+
+Improved:
+
+* evidence precision
+* retrieval relevance
+* noisy-context robustness
+* grounded generation
+
+---
+
+## 🔥 Phase 3 — Context Compression
+
+Added:
+
+* sentence extraction
+* evidence scoring
+* redundancy filtering
+* token budgeting
+
+Pipeline:
+
+```text
+Reranked Chunks
+      ↓
+Context Selector
+      ↓
+Compressed Evidence
+      ↓
+Generator
+```
+
+Improved:
+
+* grounding quality
+* token efficiency
+* hallucination resistance
+* GPT-2 robustness on noisy contexts
+
+---
+
+## 🔥 Phase 4 — Retrieval Analytics
+
+Added:
+
+* JSONL experiment logging
+* latency profiling
+* refusal tracking
+* compression analytics
+* rerank score analysis
+
+Tracks:
+
+```text
+retrieval_ms
+rerank_ms
+compression_ms
+generation_ms
+compression_ratio
+refused
+```
+
+This transformed the system from:
+
+> a RAG prototype
+
+into:
+
+> a measurable retrieval experimentation framework
+
+---
+
+## 🔥 Current Retrieval Pipeline
+
+```text
+User Question
+      ↓
+Hybrid Retrieval
+(Dense + BM25)
+      ↓
+RetrievalResult Objects
+      ↓
+CrossEncoder Reranker
+      ↓
+Context Selector / Compression
+      ↓
+Compressed Evidence Context
+      ↓
+Generator
+   ├── Mistral
+   └── Fine-Tuned GPT-2
+      ↓
+Grounded Answer
+      ↓
+Analytics + Evaluation Logs
+```
+
 
 # 📈 Current Research Direction
 
