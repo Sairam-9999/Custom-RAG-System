@@ -1,7 +1,12 @@
 import argparse
 from pathlib import Path
 
+import time
+
 from rag.rag_pipeline import build_rag, ask_rag
+from rag.reranker import CrossEncoderReranker
+from rag.context_selector import ContextSelector
+from rag.analytics import AnalyticsLogger
 from rag.generator_mistral import generate_answer as mistral_generate
 from rag.generator_finetuned import generate_answer as finetuned_generate, load_finetuned_model
 
@@ -9,10 +14,41 @@ from rag.generator_finetuned import generate_answer as finetuned_generate, load_
 def print_context(context_chunks, top_n=3):
     print("\n--- Retrieved Context ---\n")
 
-    for i, chunk in enumerate(context_chunks[:top_n], start=1):
+    for i, result in enumerate(context_chunks[:top_n], start=1):
         print(f"\n--- Chunk {i} ---")
-        print(chunk)
+        print(f"chunk_id:        {result.chunk_id}")
+        print(f"semantic_score:  {result.semantic_score:.4f}")
+        print(f"bm25_score:      {result.bm25_score:.4f}")
+        print(f"hybrid_score:    {result.hybrid_score:.4f}")
+        print(f"rerank_score:    {result.rerank_score if result.rerank_score is not None else None}")
+        print()
+        print(result.text)
         print("--- END CHUNK ---")
+
+
+def print_evidence(compressed, results_map):
+    print("\n--- Selected Evidence Sentences ---\n")
+
+    for sentence in compressed.selected_sentences:
+        # Find the originating chunk for score provenance
+        origin = None
+        for r in results_map:
+            if sentence in r.text:
+                origin = r
+                break
+
+        if origin:
+            print(f"[Chunk {origin.chunk_id}]")
+            print(f"Rerank Score:  {origin.rerank_score if origin.rerank_score is not None else 'N/A'}")
+            print()
+        print(f'"{sentence}"')
+        print()
+
+    if compressed.metadata:
+        print("Selector metadata:")
+        for k, v in compressed.metadata.items():
+            print(f"  {k}: {v}")
+    print("--- END EVIDENCE ---")
 
 
 def main():
@@ -62,6 +98,80 @@ def main():
         help="Hide retrieved chunks from terminal output.",
     )
 
+    parser.add_argument(
+        "--use-reranker",
+        action="store_true",
+        help="Enable cross-encoder reranking after hybrid retrieval.",
+    )
+
+    parser.add_argument(
+        "--reranker-model",
+        type=str,
+        default="BAAI/bge-reranker-base",
+        help="Cross-encoder model name for reranking.",
+    )
+
+    parser.add_argument(
+        "--retrieval-top-k",
+        type=int,
+        default=30,
+        help="Number of candidates to retrieve before reranking.",
+    )
+
+    parser.add_argument(
+        "--rerank-top-n",
+        type=int,
+        default=5,
+        help="Number of chunks to keep after reranking.",
+    )
+
+    parser.add_argument(
+        "--context-top-n",
+        type=int,
+        default=3,
+        help="Number of top chunks to feed into the generator prompt.",
+    )
+
+    parser.add_argument(
+        "--use-context-selector",
+        action="store_true",
+        help="Enable evidence-based context compression before generation.",
+    )
+
+    parser.add_argument(
+        "--max-context-sentences",
+        type=int,
+        default=8,
+        help="Maximum sentences the context selector may include.",
+    )
+
+    parser.add_argument(
+        "--max-context-chars",
+        type=int,
+        default=2500,
+        help="Maximum characters the context selector may include.",
+    )
+
+    parser.add_argument(
+        "--enable-analytics",
+        action="store_true",
+        help="Enable structured JSONL analytics logging.",
+    )
+
+    parser.add_argument(
+        "--analytics-log-path",
+        type=str,
+        default="logs/rag_runs.jsonl",
+        help="Path to the JSONL analytics log file.",
+    )
+
+    parser.add_argument(
+        "--experiment-name",
+        type=str,
+        default="default",
+        help="Experiment tag for A/B tracking in analytics logs.",
+    )
+
     args = parser.parse_args()
 
     data_path = Path(args.file)
@@ -81,23 +191,63 @@ def main():
         finetuned_model = load_finetuned_model(checkpoint_path=args.checkpoint)
         print("Model loaded.\n")
 
-    # 3. Ask user question
+    # 3. Optionally load reranker
+    reranker = None
+    if args.use_reranker:
+        print(f"Loading reranker: {args.reranker_model} ...")
+        reranker = CrossEncoderReranker(model_name=args.reranker_model)
+        print("Reranker loaded.\n")
+
+    # 4. Optionally load context selector
+    context_selector = None
+    if args.use_context_selector:
+        context_selector = ContextSelector(
+            max_sentences=args.max_context_sentences,
+            max_chars=args.max_context_chars,
+        )
+        print("Context selector enabled.\n")
+
+    # 5. Optionally initialise analytics logger
+    analytics = None
+    if args.enable_analytics:
+        analytics = AnalyticsLogger(
+            log_path=args.analytics_log_path,
+            experiment=args.experiment_name,
+        )
+        print(f"Analytics enabled. Logging to: {args.analytics_log_path}\n")
+
+    # 6. Ask user question
     query = input("Ask a question: ")
 
-    # 4. Retrieve context + build prompts
-    mistral_prompt, context_chunks = ask_rag(query, store, chunks)
+    # 7. Retrieve context + build prompts
+    mistral_prompt, context_chunks, compressed, timings = ask_rag(
+        query,
+        store,
+        chunks,
+        reranker=reranker,
+        context_selector=context_selector,
+        retrieval_top_k=args.retrieval_top_k,
+        rerank_top_n=args.rerank_top_n,
+        context_top_n=args.context_top_n,
+    )
 
     if not args.hide_context:
-        print_context(context_chunks, top_n=10)
+        print_context(context_chunks, top_n=args.rerank_top_n if args.use_reranker else args.retrieval_top_k)
+        if compressed is not None:
+            print_evidence(compressed, context_chunks)
 
     print("\n--- Generating Answer ---\n")
 
-    # 5. Generate final answer
+    # 8. Generate final answer (timed)
+    t_gen_start = time.perf_counter()
     if args.mode == "mistral":
         answer = mistral_generate(mistral_prompt)
 
     elif args.mode == "finetuned":
-        context = "\n\n".join(context_chunks[:2])
+        if compressed is not None:
+            context = compressed.context
+        else:
+            context = "\n\n".join(r.text for r in context_chunks[:args.context_top_n])
 
         answer = finetuned_generate(
             context=context,
@@ -110,7 +260,26 @@ def main():
     else:
         raise ValueError(f"Unsupported mode: {args.mode}")
 
+    timings["generation_ms"] = (time.perf_counter() - t_gen_start) * 1000
+    timings["total_ms"] = sum(v for v in timings.values() if isinstance(v, (int, float)))
+
     print(answer)
+
+    # 9. Analytics logging
+    if analytics is not None:
+        record = analytics.log(
+            query=query,
+            mode=args.mode,
+            retrieval_results=context_chunks,
+            compressed=compressed,
+            answer=answer,
+            retrieval_top_k=args.retrieval_top_k,
+            reranker_enabled=args.use_reranker,
+            rerank_top_n=args.rerank_top_n,
+            selector_enabled=args.use_context_selector,
+            latency_ms=timings,
+        )
+        analytics.print_summary(record)
 
 
 if __name__ == "__main__":
