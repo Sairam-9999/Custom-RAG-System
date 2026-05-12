@@ -8,7 +8,7 @@ without requiring cascading changes.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict,  List, Any
 
 
 @dataclass
