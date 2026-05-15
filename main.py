@@ -3,12 +3,9 @@ from pathlib import Path
 
 import time
 
-from rag.rag_pipeline import build_rag, ask_rag
-from rag.reranker import CrossEncoderReranker
-from rag.context_selector import ContextSelector
-from rag.analytics import AnalyticsLogger
-from rag.generator_mistral import generate_answer as mistral_generate
-from rag.generator_finetuned import generate_answer as finetuned_generate, load_finetuned_model
+from rag.pipeline import build_rag, ask_rag
+from rag.retrieval import CrossEncoderReranker, ContextSelector
+from rag.answering.generator_mistral import generate_answer as mistral_generate
 
 
 def print_context(context_chunks, top_n=3):
@@ -52,6 +49,9 @@ def print_evidence(compressed, results_map):
 
 
 def main():
+    # START TOTAL EXECUTION TIMER
+    total_start_time = time.perf_counter()
+
     parser = argparse.ArgumentParser(
         description="Local RAG runner using Mistral or fine-tuned GPT-2."
     )
@@ -67,7 +67,7 @@ def main():
     parser.add_argument(
         "--file",
         type=str,
-        default="data/magic_academy_100kb_story.txt",
+        default="data/space_epic_story_600kb.txt",
         help="TXT file to index and test with RAG.",
     )
 
@@ -153,23 +153,11 @@ def main():
     )
 
     parser.add_argument(
-        "--enable-analytics",
-        action="store_true",
-        help="Enable structured JSONL analytics logging.",
-    )
-
-    parser.add_argument(
-        "--analytics-log-path",
+        "--workload-type",
         type=str,
-        default="logs/rag_runs.jsonl",
-        help="Path to the JSONL analytics log file.",
-    )
-
-    parser.add_argument(
-        "--experiment-name",
-        type=str,
-        default="default",
-        help="Experiment tag for A/B tracking in analytics logs.",
+        choices=["fact", "analytical", "mixed"],
+        default="mixed",
+        help="Expected query workload for optimal chunking: 'fact' (small chunks), 'analytical' (medium chunks), 'mixed' (default).",
     )
 
     args = parser.parse_args()
@@ -179,14 +167,16 @@ def main():
         raise FileNotFoundError(f"TXT file not found: {data_path}")
 
     print(f"\nRunning in mode: {args.mode.upper()}")
-    print(f"Using data file: {data_path}\n")
+    print(f"File: {args.file}")
+    print(f"Query-driven orchestration: Enabled\n")
 
-    # 1. Build RAG index from selected TXT file
-    store, chunks = build_rag(str(data_path))
+    # 1. Build RAG index from selected TXT file with workload-optimized chunking
+    store, chunks = build_rag(str(data_path), workload_type=args.workload_type)
 
     # 2. Load model once if using finetuned mode
     finetuned_model = None
     if args.mode == "finetuned":
+        from rag.answering.generator_finetuned import generate_answer as finetuned_generate, load_finetuned_model
         print("Loading fine-tuned GPT-2 model...")
         finetuned_model = load_finetuned_model(checkpoint_path=args.checkpoint)
         print("Model loaded.\n")
@@ -207,20 +197,11 @@ def main():
         )
         print("Context selector enabled.\n")
 
-    # 5. Optionally initialise analytics logger
-    analytics = None
-    if args.enable_analytics:
-        analytics = AnalyticsLogger(
-            log_path=args.analytics_log_path,
-            experiment=args.experiment_name,
-        )
-        print(f"Analytics enabled. Logging to: {args.analytics_log_path}\n")
-
-    # 6. Ask user question
+    # 5. Ask user question
     query = input("Ask a question: ")
 
-    # 7. Retrieve context + build prompts
-    mistral_prompt, context_chunks, compressed, timings = ask_rag(
+    # 7. Retrieve context + build prompts with query-driven orchestration
+    answer_or_prompt, context_chunks, compressed, timings, analysis = ask_rag(
         query,
         store,
         chunks,
@@ -231,6 +212,17 @@ def main():
         context_top_n=args.context_top_n,
     )
 
+    # If deterministic answer was extracted directly, print and exit
+    if timings.get("answer_source") == "deterministic_extraction":
+        print(answer_or_prompt)
+        print("\n--- Execution Complete ---")
+        return
+
+    # Extract adaptive configuration for generation
+    adaptive_config = timings.get("adaptive_config", {})
+    max_new_tokens = adaptive_config.get("max_new_tokens", args.max_new_tokens)
+    use_extractive_first = adaptive_config.get("use_extractive_first", False)
+
     if not args.hide_context:
         print_context(context_chunks, top_n=args.rerank_top_n if args.use_reranker else args.retrieval_top_k)
         if compressed is not None:
@@ -238,10 +230,18 @@ def main():
 
     print("\n--- Generating Answer ---\n")
 
-    # 8. Generate final answer (timed)
+    # 8. Generate final answer (timed) with adaptive parameters
     t_gen_start = time.perf_counter()
     if args.mode == "mistral":
-        answer = mistral_generate(mistral_prompt)
+        # Prepare context for fallback
+        if compressed is not None:
+            context_for_fallback = compressed.context
+        else:
+            context_for_fallback = "\n\n".join(r.text for r in context_chunks[:args.context_top_n])
+        
+        # Use adaptive max_new_tokens for concise factual answers
+        # Pass query_analysis for query-aware fallback
+        answer = mistral_generate(answer_or_prompt, num_predict=max_new_tokens, context=context_for_fallback, question=query, query_analysis=analysis)
 
     elif args.mode == "finetuned":
         if compressed is not None:
@@ -249,12 +249,14 @@ def main():
         else:
             context = "\n\n".join(r.text for r in context_chunks[:args.context_top_n])
 
+        # Use adaptive parameters: extractive shortcut for facts, optimized token limits
         answer = finetuned_generate(
             context=context,
             question=query,
             model=finetuned_model,
-            max_new_tokens=args.max_new_tokens,
+            max_new_tokens=max_new_tokens,
             temperature=args.temperature,
+            use_extractive_first=use_extractive_first,
         )
 
     else:
@@ -265,21 +267,11 @@ def main():
 
     print(answer)
 
-    # 9. Analytics logging
-    if analytics is not None:
-        record = analytics.log(
-            query=query,
-            mode=args.mode,
-            retrieval_results=context_chunks,
-            compressed=compressed,
-            answer=answer,
-            retrieval_top_k=args.retrieval_top_k,
-            reranker_enabled=args.use_reranker,
-            rerank_top_n=args.rerank_top_n,
-            selector_enabled=args.use_context_selector,
-            latency_ms=timings,
-        )
-        analytics.print_summary(record)
+    # TOTAL EXECUTION TIME
+    total_execution_time = time.perf_counter() - total_start_time
+
+    print("\n--- Execution Complete ---")
+    print(f"Total execution time: {total_execution_time:.2f} seconds")
 
 
 if __name__ == "__main__":
