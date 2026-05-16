@@ -1,18 +1,57 @@
-# RAG + Fine-Tuned GPT-2 + Mistral Research System
+# Adaptive Retrieval Intelligence Platform
 
-A research-focused Retrieval-Augmented Generation (RAG) system exploring:
+### Retrieval-Oriented LLM Orchestration, Grounded Generation, and Retrieval Evaluation Research System
 
-* semantic retrieval
-* grounded QA
-* synthetic dataset generation
-* GPT-2 fine-tuning
+A research-focused adaptive Retrieval-Augmented Generation (RAG) platform exploring:
+
+* adaptive retrieval orchestration
+* grounded generation
+* retrieval intelligence
+* reasoning-aware context compression
+* retrieval evaluation and observability
 * hallucination reduction
-* realistic noisy-context training
-* local Mistral inference
-* retrieval-aware generation
+* self-correcting retrieval systems
+* synthetic dataset generation
+* retrieval-aware fine-tuning
+* local LLM inference
+* future retrieval-native reasoning architectures
 
-This project evolved from a simple RAG prototype into a deeper exploration of modern retrieval-grounded LLM system design.
+This project evolved from a simple semantic-search RAG prototype into a modern retrieval intelligence research platform focused on building production-oriented grounded AI systems capable of handling complex reasoning and domain-agnostic question answering.
+
 Model weights are not committed. Run the training/download scripts to recreate them locally.
+
+---
+
+# 🧠 Core Research Direction
+
+The primary focus of this project is no longer “prompt engineering” or “simple vector search.”
+
+The system is evolving toward:
+
+```text
+Retrieval-Native Intelligence
+```
+
+where retrieval itself becomes intelligent through:
+
+* adaptive query understanding
+* retrieval planning
+* reranking orchestration
+* reasoning-aware evidence selection
+* grounding validation
+* retrieval evaluation
+* retry/self-correction loops
+* evidence-oriented orchestration
+
+The long-term goal is to build a generalized retrieval system capable of supporting:
+
+* factual QA
+* reasoning-heavy queries
+* comparative analysis
+* temporal understanding
+* multi-hop retrieval
+* grounded conversational systems
+* future custom retrieval-oriented GPT systems
 
 ---
 
@@ -21,15 +60,24 @@ Model weights are not committed. Run the training/download scripts to recreate t
 The system:
 
 1. Reads `.txt` documents
-2. Splits them into semantic chunks
-3. Embeds chunks using Sentence Transformers
-4. Stores embeddings in a vector index
-5. Retrieves relevant chunks for a query
-6. Generates answers using:
+2. Splits documents into semantic chunks
+3. Generates embeddings using Sentence Transformers
+4. Stores embeddings inside FAISS vector indexes
+5. Performs hybrid retrieval:
+
+   * dense retrieval
+   * BM25 retrieval
+6. Dynamically adapts retrieval policies based on query type
+7. Applies reranking and evidence-aware context compression
+8. Generates grounded answers using:
 
    * Mistral (via Ollama)
-   * Fine-tuned GPT-2
-7. Supports grounded refusals:
+   * Fine-Tuned GPT-2
+9. Validates groundedness and hallucination risk
+10. Supports retrieval retries and self-correction loops
+11. Tracks retrieval metrics and observability diagnostics
+
+The system also supports grounded refusals:
 
 ```text
 I don't know from the provided context.
@@ -37,25 +85,37 @@ I don't know from the provided context.
 
 ---
 
-# 🧠 System Architecture
+# 🧠 Current Adaptive Retrieval Architecture
 
 ```text
-User Question
-      ↓
+User Query
+    ↓
+Query Understanding
+    ↓
+Adaptive Retrieval Policy
+    ↓
 Hybrid Retrieval
 (Dense + BM25)
-      ↓
-CrossEncoder Reranker
-      ↓
-Context Selector / Compression
-      ↓
+    ↓
+RetrievalResult Objects
+    ↓
+CrossEncoder Reranking
+    ↓
+Reasoning-Aware Context Selection
+    ↓
+Compressed Evidence Context
+    ↓
 Generator
    ├── Mistral
    └── Fine-Tuned GPT-2
-      ↓
-Grounded Answer
-      ↓
-Analytics + Evaluation Logs
+    ↓
+Grounding Validation
+    ↓
+Retry / Self-Correction
+    ↓
+Final Grounded Response
+    ↓
+Evaluation + Observability
 ```
 
 ---
@@ -63,123 +123,287 @@ Analytics + Evaluation Logs
 # 📂 Current Project Structure
 
 ```text
-RAG pus LLM/
+Custom-RAG-System/
+├── assets/
+│   ├── Unseen result 2.png
+│   ├── Unseen result 3.png
+│   ├── Unseen result 4.png
+│   ├── Unseen result 5.png
+│   ├── Unseen result.png
+│   ├── ss.png
+│   └── ssc.png
+├── cache/
+│   └── indexes/
 ├── data/
-│   ├── The_Verdict.txt
-│   ├── adventure_party_treasure_hunt_100kb_story.txt
-│   ├── big.txt
-│   ├── dragons_and_ancient_powers_100kb_story.txt
-│   ├── epic_kingdoms_and_wars_100kb_story.txt
-│   └── mythology_inspired_100kb_story.txt
-│
 ├── model/
 │   ├── custom_gpt_updated.py
 │   ├── fine_tune_gpt2_rag.py
 │   ├── generate_large_rag_dataset.py
 │   ├── gpt_download_updated.py
-│   ├── rag_train_mixed_large.jsonl
 │   ├── rag_eval_mixed_large.jsonl
 │   ├── rag_mixed_dataset_manifest.json
+│   ├── rag_train_mixed_large.jsonl
+│   ├── rag_training_mixed_large_all.jsonl
 │   └── test_finetuned_gpt2.py
-│
 ├── rag/
-│ ├── analytics.py
-│ ├── chunker.py
-│ ├── context_selector.py
-│ ├── embedder.py
-│ ├── generator_finetuned.py
-│ ├── generator_mistral.py
-│ ├── rag_pipeline.py
-│ ├── reranker.py
-│ ├── retrieval_types.py
-│ ├── retriever.py
-│ └── vector_store.py
-│
-├── requirements.txt
+│   ├── __init__.py
+│   ├── answering/
+│   │   ├── __init__.py
+│   │   ├── evidence_answer_extractor.py
+│   │   ├── extractive_fallback.py
+│   │   ├── generator_finetuned.py
+│   │   ├── generator_mistral.py
+│   │   ├── prompt_orchestrator.py
+│   │   └── validator.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   └── types.py
+│   ├── evaluation/
+│   │   ├── __init__.py
+│   │   ├── eval_types.py
+│   │   ├── evaluator.py
+│   │   └── retrieval_metrics.py
+│   ├── indexing/
+│   │   ├── __init__.py
+│   │   ├── cache.py
+│   │   ├── chunker.py
+│   │   ├── embedder.py
+│   │   ├── file_fingerprint.py
+│   │   └── vector_store.py
+│   ├── pipeline.py
+│   ├── query/
+│   │   ├── __init__.py
+│   │   ├── classifier.py
+│   │   ├── decomposition.py
+│   │   ├── parser.py
+│   │   ├── policy_engine.py
+│   │   └── slot_extractor.py
+│   └── retrieval/
+│       ├── __init__.py
+│       ├── context_selector.py
+│       ├── reranker.py
+│       ├── retriever.py
+│       └── retry.py
 └── main.py
 ```
 
 ---
 
-# ⚡ Features
+# 🔥 Modern Retrieval Intelligence Features
 
-## ✅ Semantic Retrieval
+## ✅ Adaptive Query Understanding
 
-Uses:
+Supports:
 
-* Sentence Transformers
-* vector similarity search
-* evidence-aware reranking
-* chunk deduplication
+* query classification
+* reasoning query detection
+* comparative query handling
+* temporal query handling
+* procedural query handling
+* analytical query handling
+* multi-hop query handling
+* decomposition planning
+* slot extraction
+* semantic answer targeting
 
 ---
 
-## ✅ Fine-Tuned GPT-2
+## ✅ Hybrid Retrieval
+
+Combines:
+
+* semantic vector retrieval
+* BM25 lexical retrieval
+* hybrid evidence scoring
+* deduplication
+* adaptive candidate selection
+
+---
+
+## ✅ CrossEncoder Reranking
+
+Pipeline:
+
+```text
+Hybrid Retrieval
+      ↓
+CrossEncoder Reranker
+      ↓
+Top Evidence Chunks
+```
+
+Supports:
+
+```text
+BAAI/bge-reranker-base
+```
+
+Improves:
+
+* retrieval precision
+* evidence ordering
+* noisy-context robustness
+* grounded answer quality
+
+---
+
+## ✅ Reasoning-Aware Context Compression
+
+Context selector performs:
+
+* sentence extraction
+* evidence scoring
+* redundancy filtering
+* token budgeting
+* compressed evidence generation
+
+Pipeline:
+
+```text
+Reranked Chunks
+      ↓
+Context Selector
+      ↓
+Compressed Evidence
+      ↓
+LLM
+```
+
+Improves:
+
+* grounding density
+* token efficiency
+* hallucination resistance
+* retrieval focus
+
+---
+
+## ✅ Grounding Validation
+
+Validation layer supports:
+
+* hallucination detection
+* unsupported claim detection
+* evidence coverage scoring
+* contradiction detection
+* confidence scoring
+* grounded refusal handling
+
+---
+
+## ✅ Retrieval Retry + Self-Correction
+
+The system supports validation-driven retrieval retries:
+
+```text
+Retrieve
+    ↓
+Generate
+    ↓
+Validate
+    ↓
+Retry Retrieval
+    ↓
+Regenerate
+```
+
+Supports:
+
+* query reformulation
+* retrieval expansion
+* rerank depth increases
+* context broadening
+* query decomposition retries
+
+---
+
+## ✅ Retrieval Evaluation Framework
+
+The project now includes a dedicated retrieval evaluation layer.
+
+Supports:
+
+* precision@k
+* recall@k
+* hit@k
+* MRR
+* evidence coverage
+* stage-wise retrieval evaluation
+* reranker evaluation
+* context selector evaluation
+
+This transformed the project from:
+
+```text
+RAG experimentation
+```
+
+into:
+
+```text
+Retrieval observability and evaluation research
+```
+
+---
+
+# 🧪 Example Query Types
+
+## Factual
+
+```text
+What destroyed kingdoms faster than swords?
+```
+
+## Reasoning
+
+```text
+Why did fleets continue deeper into the darkness despite fear?
+```
+
+## Comparative
+
+```text
+Compare the Titan Republic and the Nyx Syndicate.
+```
+
+## Temporal
+
+```text
+What happened during the age of expansion?
+```
+
+## Multi-Hop
+
+```text
+Which characters remembered the Astral Monks' prophecies and what did they warn?
+```
+
+---
+
+# 🧠 Fine-Tuned GPT-2 Research
 
 Supports:
 
 * GPT-2 124M
 * GPT-2 355M
 
-Custom training pipeline includes:
+Training pipeline includes:
 
 * retrieval-grounded QA
-* refusal behavior
-* noisy-context learning
 * synthetic instruction generation
-
----
-
-## ✅ Local Mistral Inference
-
-Supports local inference through Ollama:
-
-```powershell
-ollama run mistral
-```
-
-This provides significantly stronger reasoning and grounding than small GPT-2 models.
-
----
-
-## ✅ Synthetic Dataset Generation
-
-Automatically generates:
-
-* what questions
-* who questions
-* where questions
-* when questions
-* why questions
-* how questions
-* which questions
-* did/was questions
-* refusal examples
-
----
-
-## ✅ Realistic RAG Training
-
-The system trains using noisy multi-chunk retrieval simulation:
-
-```text
-Chunk 1 → distractor
-Chunk 2 → answer
-Chunk 3 → irrelevant
-```
-
-This teaches:
-
-* evidence grounding
+* refusal behavior
+* noisy retrieval simulation
 * distractor rejection
 * hallucination reduction
-* realistic retrieval behavior
 
 ---
 
-# 🔥 How Dataset Generation Works
+# 🔥 Synthetic Dataset Generation
 
-The project includes a fully generic synthetic dataset generator:
+The system includes a fully generic synthetic dataset generator.
+
+Pipeline:
 
 ```text
 Documents
@@ -188,44 +412,55 @@ Automatic QA Generation
     ↓
 Question Augmentation
     ↓
-Noisy Chunk Construction
+Noisy Retrieval Simulation
     ↓
 Refusal Example Injection
     ↓
-Train/Eval Split
+Train / Eval Split
     ↓
 Fine-Tuning
 ```
 
-The generator creates:
+Supports:
 
-* grounded QA examples
-* reasoning examples
+* factual QA
+* reasoning QA
 * refusal behavior
-* paraphrased questions
+* distractor examples
 * noisy retrieval simulations
+* paraphrased questions
 
 ---
 
-# 🧪 Example Questions
+# ⚡ Local Mistral Inference
 
-## Sherlock / Literary QA
+Supports local inference through Ollama:
 
-```text
-Who became the man of the moment?
-What insight does The Red-Headed League show?
-Who gave Gisburn the donkey sketch?
+```powershell
+ollama pull mistral
+ollama run mistral
 ```
+
+Mistral provides significantly stronger reasoning and grounding than smaller GPT-2 models.
 
 ---
 
-## Fantasy QA
+# 📈 Retrieval Observability
+
+Tracks:
 
 ```text
-What destroyed kingdoms faster than swords?
-Where did priests wearing bone masks chant?
-Who controlled the black towers beneath the crimson moon?
+retrieval_ms
+rerank_ms
+compression_ms
+generation_ms
+compression_ratio
+refused
+evidence_coverage
+hallucination_flags
 ```
+
+The system now supports measurable retrieval diagnostics instead of blind optimization.
 
 ---
 
@@ -252,7 +487,9 @@ pip install torch transformers sentence-transformers faiss-cpu numpy pandas tikt
 
 Install:
 
+```text
 https://ollama.com
+```
 
 Then run:
 
@@ -287,19 +524,9 @@ python main.py --mode finetuned --file data/The_Verdict.txt
 python model/generate_large_rag_dataset.py
 ```
 
-Outputs:
-
-```text
-rag_train_mixed_large.jsonl
-rag_eval_mixed_large.jsonl
-rag_training_mixed_large_all.jsonl
-```
-
 ---
 
 # 🔥 Fine-Tune GPT-2
-
-## GPT-2 355M
 
 ```powershell
 python model/fine_tune_gpt2_rag.py --train model/rag_train_mixed_large.jsonl --eval model/rag_eval_mixed_large.jsonl --model-size 355M --epochs 1 --max-length 256
@@ -313,362 +540,119 @@ python model/fine_tune_gpt2_rag.py --train model/rag_train_mixed_large.jsonl --e
 python model/test_finetuned_gpt2.py
 ```
 
-Test on custom files:
-
-```powershell
-python model/test_finetuned_gpt2.py --context-file data/magic_academy_100kb_story.txt --question "Where did priests wearing bone masks chant beside rivers of fire?"
-```
-
 ---
 
 # 🧠 Major Engineering Learnings
 
 ## Retrieval Quality Dominates RAG Quality
 
-Improving retrieval often improved answers more than fine-tuning alone.
+As the system evolved, retrieval orchestration became more important than model size alone.
+
+Improving:
+
+* retrieval precision
+* reranking
+* context compression
+* evidence quality
+
+often improved grounded answers more than fine-tuning itself.
 
 ---
 
 ## Small GPT Models Overfit Easily
 
-Small GPT-2 models:
+Smaller GPT-2 models:
 
-* memorize patterns quickly
 * hallucinate confidently
+* memorize patterns
 * struggle on unseen contexts
-* require strong grounding supervision
+* require strong retrieval grounding
 
 ---
 
-## Grounded QA Needs Specialized Training
-
-Standard next-token prediction is not enough.
+## Grounded QA Requires Specialized Training
 
 The model must explicitly learn:
 
 * answer extraction
-* evidence grounding
-* refusal behavior
+* grounding behavior
+* refusal handling
 * distractor rejection
+* evidence focus
 
 ---
 
 ## Synthetic Data Is Extremely Powerful
 
-The project demonstrates how synthetic QA generation can bootstrap large grounded datasets automatically.
-
-This mirrors real-world modern LLM training strategies.
+Synthetic QA generation enabled scalable grounded dataset creation for retrieval-aware training.
 
 ---
 
-# 🚀 Recent Major Upgrades
+# ⚠️ Current Research Bottlenecks
 
-## 🔥 Fully Generic Dataset Generation
+Current limitations include:
 
-The project evolved from handcrafted story-specific QA generation into a fully generic synthetic RAG dataset pipeline.
-
-Supports arbitrary `.txt` documents.
-
----
-
-## 🔥 Multi-Domain Training
-
-Training now includes:
-
-* mystery stories
-* fantasy worlds
-* mythology-inspired stories
-* literary prose
-* adventure stories
-* war narratives
-
-This improves:
-
-* generalization
-* retrieval robustness
-* unseen-domain testing
+* reasoning-aware evidence compression
+* bridge fact preservation
+* multi-hop evidence orchestration
+* contradiction resolution
+* long-context grounding
+* retrieval observability at scale
+* reasoning chain construction
 
 ---
 
-## 🔥 Noisy Retrieval Training
-
-Training contexts now simulate real RAG retrieval:
-
-```text
-Chunk 1 → irrelevant
-Chunk 2 → answer
-Chunk 3 → distractor
-```
-
-This teaches the model to focus on evidence-bearing chunks.
-
----
-
-## 🔥 Grounded Refusal Training
-
-The model now learns grounded refusals:
-
-```text
-I don't know from the provided context.
-```
-
-This reduces hallucinations on unsupported questions.
-
----
-
-## 🔥 Improved Decoding
-
-Generation improvements include:
-
-* greedy decoding
-* low-temperature factual inference
-* EOS stopping
-* repetition cleanup
-* fallback refusal handling
-
----
-
-## 🔥 Retrieval Improvements
-
-Retriever upgrades include:
-
-* semantic reranking
-* evidence scoring
-* query expansion
-* overlap scoring
-* chunk deduplication
-
----
-
-## 🔥 GPT-2 Scaling Experiments
-
-The project evolved from GPT-2 124M experiments into larger GPT-2 355M fine-tuning experiments.
-
-The 355M model was successfully:
-
-* downloaded locally
-* loaded into the custom GPT architecture
-* fine-tuned on synthetic RAG datasets
-* evaluated on unseen retrieval contexts
-* tested against multiple document domains
-
-Research observations:
-
-| Model            | Observation                                                                  |
-| ---------------- | ---------------------------------------------------------------------------- |
-| GPT-2 124M       | weak grounding and unstable extraction                                       |
-| GPT-2 355M       | noticeably stronger retrieval-grounded QA                                    |
-| Fine-tuned GPT-2 | improved factual extraction but still struggles on difficult unseen contexts |
-| Mistral          | significantly stronger reasoning and grounding                               |
-
-The experiments demonstrated how model scale directly impacts:
-
-* grounding quality
-* answer extraction
-* hallucination behavior
-* retrieval robustness
-* unseen-domain generalization
-
----
-
-
-# 🚀 Modern Retrieval Optimization Upgrades
-
-The project evolved from a basic RAG pipeline into a modern retrieval-grounded experimentation platform focused on:
-
-* retrieval precision
-* grounded evidence extraction
-* hallucination reduction
-* observability
-* measurable RAG evaluation
-
----
-
-## 🔥 Phase 1 — Structured Retrieval
-
-Introduced structured `RetrievalResult` objects instead of raw chunk strings.
-
-Enabled:
-
-* metadata propagation
-* reranking support
-* observability
-* analytics infrastructure
-
-```python
-@dataclass
-class RetrievalResult:
-    chunk_id: int
-    text: str
-    semantic_score: float
-    bm25_score: float
-    hybrid_score: float
-    rerank_score: Optional[float] = None
-```
-
----
-
-## 🔥 Phase 2 — CrossEncoder Reranking
-
-Upgraded pipeline:
-
-```text
-Hybrid Retrieval
-      ↓
-CrossEncoder Reranker
-      ↓
-Top Evidence Chunks
-      ↓
-LLM
-```
-
-Supports:
-
-```text
-BAAI/bge-reranker-base
-```
-
-Improved:
-
-* evidence precision
-* retrieval relevance
-* noisy-context robustness
-* grounded generation
-
----
-
-## 🔥 Phase 3 — Context Compression
-
-Added:
-
-* sentence extraction
-* evidence scoring
-* redundancy filtering
-* token budgeting
-
-Pipeline:
-
-```text
-Reranked Chunks
-      ↓
-Context Selector
-      ↓
-Compressed Evidence
-      ↓
-Generator
-```
-
-Improved:
-
-* grounding quality
-* token efficiency
-* hallucination resistance
-* GPT-2 robustness on noisy contexts
-
----
-
-## 🔥 Phase 4 — Retrieval Analytics
-
-Added:
-
-* JSONL experiment logging
-* latency profiling
-* refusal tracking
-* compression analytics
-* rerank score analysis
-
-Tracks:
-
-```text
-retrieval_ms
-rerank_ms
-compression_ms
-generation_ms
-compression_ratio
-refused
-```
-
-This transformed the system from:
-
-> a RAG prototype
-
-into:
-
-> a measurable retrieval experimentation framework
-
----
-
-## 🔥 Current Retrieval Pipeline
-
-```text
-User Question
-      ↓
-Hybrid Retrieval
-(Dense + BM25)
-      ↓
-RetrievalResult Objects
-      ↓
-CrossEncoder Reranker
-      ↓
-Context Selector / Compression
-      ↓
-Compressed Evidence Context
-      ↓
-Generator
-   ├── Mistral
-   └── Fine-Tuned GPT-2
-      ↓
-Grounded Answer
-      ↓
-Analytics + Evaluation Logs
-```
-
-
-# 📈 Current Research Direction
+# 🚀 Future Research Direction
 
 Ongoing exploration includes:
 
-* larger GPT-2 variants
-* LoRA / QLoRA fine-tuning
-* Mistral/Qwen instruction tuning
-* hybrid BM25 + vector retrieval
-* cross-encoder rerankers
+* evidence graph construction
+* reasoning-aware retrieval
+* bridge fact preservation
+* retrieval-native reasoning
+* source reliability modeling
+* memory-aware retrieval
+* long-context orchestration
+* agentic retrieval planning
+* contradiction resolution
 * conversational RAG
-* RAGAS evaluation
-* long-context optimization
-* agentic RAG systems
+* retrieval-aware instruction tuning
+* adaptive evidence orchestration
 
 ---
 
-# ⚠️ Current Limitations
+# 🧠 Future Custom GPT Direction
 
-Small GPT-2 models still struggle with:
+The long-term goal is evolving toward custom retrieval-oriented GPT systems capable of:
 
-* difficult unseen contexts
-* multi-hop reasoning
-* exact answer extraction
-* long-context grounding
-* subtle entity disambiguation
-
-Mistral performs significantly better for real-world QA quality.
+* reasoning over retrieved evidence
+* preserving grounding
+* reducing hallucinations
+* adaptive retrieval planning
+* multi-step evidence orchestration
+* memory-aware retrieval
+* domain-agnostic grounded QA
+* retrieval-native reasoning
 
 ---
 
 # 🏁 Final Goal
 
-The long-term goal is to evolve this into:
+The long-term goal is building:
 
 ```text
-Production-grade retrieval-grounded LLM system
+Production-grade Retrieval Intelligence Systems
 ```
 
 with:
 
-* scalable retrieval
+* adaptive retrieval orchestration
 * grounded generation
+* reasoning-aware retrieval
 * advanced reranking
-* robust evaluation
-* synthetic instruction tuning
-* agentic reasoning
-* memory-aware RAG
-* multi-model orchestration
+* retrieval evaluation
+* observability
+* self-correcting retrieval loops
+* retrieval-native reasoning
+* custom retrieval-oriented GPT systems
+* scalable grounded AI architectures
