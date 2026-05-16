@@ -18,7 +18,7 @@ A research-focused adaptive Retrieval-Augmented Generation (RAG) platform explor
 
 This project evolved from a simple semantic-search RAG prototype into a modern retrieval intelligence research platform focused on building production-oriented grounded AI systems capable of handling complex reasoning and domain-agnostic question answering.
 
-Model weights are not committed. Run the training/download scripts to recreate them locally.
+Model weights are not committed (model is of personal choice to train on for better understanding). Run the training/download scripts to recreate them locally.
 
 ---
 
