@@ -181,21 +181,17 @@ def main():
         finetuned_model = load_finetuned_model(checkpoint_path=args.checkpoint)
         print("Model loaded.\n")
 
-    # 3. Optionally load reranker
-    reranker = None
-    if args.use_reranker:
-        print(f"Loading reranker: {args.reranker_model} ...")
-        reranker = CrossEncoderReranker(model_name=args.reranker_model)
-        print("Reranker loaded.\n")
+    # 3. Always instantiate reranker for adaptive orchestration
+    print(f"Loading reranker: {args.reranker_model} ...")
+    reranker = CrossEncoderReranker(model_name=args.reranker_model)
+    print("Reranker loaded.\n")
 
-    # 4. Optionally load context selector
-    context_selector = None
-    if args.use_context_selector:
-        context_selector = ContextSelector(
-            max_sentences=args.max_context_sentences,
-            max_chars=args.max_context_chars,
-        )
-        print("Context selector enabled.\n")
+    # 4. Always instantiate context selector for adaptive orchestration
+    context_selector = ContextSelector(
+        max_sentences=args.max_context_sentences,
+        max_chars=args.max_context_chars,
+    )
+    print("Context selector loaded.\n")
 
     # 5. Ask user question
     query = input("Ask a question: ")
